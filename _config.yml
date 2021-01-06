@@ -19,7 +19,7 @@ title: Jürgen Sieben on Oracle
 description: Blogs and insights
 author: jsieben # Edit also the author details in "_data/authors.yml" (multiple authors possible for a post).
 url: "https://j-sieben.github.io" # The base hostname & protocol for your site, e.g. http://example.com.
-baseurl: "" # The subpath of your site, e.g. /blog.
+baseurl: "/blog" # The subpath of your site, e.g. /blog.
 permalink: /posts/:year-:month-:day-:title # Jekyll default is /:categories/:year/:month/:day/:title.html - see also https://jekyllrb.com/docs/permalinks/
 lang: en # The base language of your site, can be overwritten on a page or post - for UI translations see also the files under _data/locales/. If you finished an additional language file please create a pull request to make it availabe for all users :-)
 show_lang_in_post_listings: true # Home page, archive, post lists on category and tag pages (useful, when you deliver mixed content).
