@@ -109,3 +109,5 @@ exclude:
   - LICENSE.txt
   - assets/reveal.js/css/theme/README.md
   - assets/reveal.js/plugin/markdown/example.md
+
+theme: jekyll-theme-slate
