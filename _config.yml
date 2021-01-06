@@ -17,7 +17,7 @@
 # in the templates via {{ site.myvariable }}.
 title: Jürgen Sieben on Oracle
 description: Blogs and insights
-author: j.sieben # Edit also the author details in "_data/authors.yml" (multiple authors possible for a post).
+author: jsieben # Edit also the author details in "_data/authors.yml" (multiple authors possible for a post).
 url: "https://ogobrecht.github.io" # The base hostname & protocol for your site, e.g. http://example.com.
 baseurl: "/hydebar" # The subpath of your site, e.g. /blog.
 permalink: /posts/:year-:month-:day-:title # Jekyll default is /:categories/:year/:month/:day/:title.html - see also https://jekyllrb.com/docs/permalinks/
