@@ -53,4 +53,4 @@ A natural choice for me was to pass those named anchors and values as a JSON ins
 
 It is now even easier to write code that meets the requirements of internationalisation. The ability to use ICU messages increases the overall quality of the code. As these messages are seamlessly integrated into the existing API, you can decide for each individual message whether you need the additional functionality of ICU messages or whether the easier-to-use normal `PIT` message is sufficient.
 
-
+Read more about this concept and how to include it into `PIT` [here](https://github.com/j-sieben/PIT/Doc/icu_messages.md).
