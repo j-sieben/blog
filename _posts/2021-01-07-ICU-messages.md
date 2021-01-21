@@ -54,3 +54,9 @@ A natural choice for me was to pass those named anchors and values as a JSON ins
 It is now even easier to write code that meets the requirements of internationalisation. The ability to use ICU messages increases the overall quality of the code. As these messages are seamlessly integrated into the existing API, you can decide for each individual message whether you need the additional functionality of ICU messages or whether the easier-to-use normal `PIT` message is sufficient.
 
 Read more about this concept and how to include it into `PIT` [here](https://github.com/j-sieben/PIT/blob/master/Doc/icu_messages.md).
+
+## How the ICU extension for `PIT` works
+
+It turned out that the required changes to `PIT` weren't as massive as feared. After importing the required ICU libraries (see the next section) and the small Java wrapper to call it from PL/SQL, it turned out that adding this wrapper method as a static member function to the `MESSAGE_TYPE` was the only change. In the constructor method of this type, it is analyzed whether the first parameter is `pit.FORMAT_ICU` and if it is, the static wrapper method is called to format the message. This was a nice proof of my concept to provide an »intelligent« message type rather than a simple string. Adding ICU was a snap basically and it leaves room for similar extension in the future.
+
+As ICU is not in integral part of the Oracle database, it is necessary to pass the actually set locale from the session context as an explicit parameter. Adding this to the Java library would have been possible but it would incur additional complexity by setting up an internal database connection from Java. Passing this information as a parameter was considered the simplest possible implementation.
