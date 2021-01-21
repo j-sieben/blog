@@ -153,4 +153,4 @@ Another topic is that ICU insists on Date types rather than LocalDate/LocalDateT
     }
 ```
 
-Again, there may be better ways to do it but this was the solution I came up with and it seems to work. Let me know if I can do better.
+Again, there may be better ways to do it but this was the solution I came up with and it seems to be working. Let me know if I can do better.
