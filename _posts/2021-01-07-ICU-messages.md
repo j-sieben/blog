@@ -120,36 +120,37 @@ You could ask why I underwent the burdon and parse the datatypes, but as you may
 Another topic is that ICU insists on Date types rather than LocalDate/LocalDateTime datatypes, but this is another issue that may be solved in a future version. As of now, I added the type detection feature in a helper class for JSON, using a simple regex cascade:
 
 ```
-if (value.matches("^(\\d{4})-0?(\\d+)-0?(\\d+)$")) {
-			// Try to generate DATE type
-            try {
-            	return java.sql.Date.valueOf(LocalDate.parse(value));
-            }
-            finally{}
-		}
-		else if (value.matches("^(\\d{4})-0?(\\d+)-0?(\\d+)[T ]0?(\\d+):0?(\\d+):0?(\\d+)$")) {
-			// Try to generate DATETIME type
-            try {
-            	return java.sql.Timestamp.valueOf(LocalDateTime.parse(value));
-            }
-            finally{}
-		}
-		else if(value.matches("^[0-9]+$")) {
-			// Try to generate INTEGER type
-			try {
-				return Integer.parseInt(value);
-			}
-			finally {}
-		}
-		
-		else if(value.matches("^[0-9\\.]+$")) {
-			// Try to generate FLOAT type
-            try {
-            	return Float.parseFloat(value);
-            }
-            finally{}
+    if (value.matches("^(\\d{4})-0?(\\d+)-0?(\\d+)$")) {
+        // Try to generate DATE type
+        try {
+            return java.sql.Date.valueOf(LocalDate.parse(value));
         }
-		return value;
+        finally{}
+    }
+    else if (value.matches("^(\\d{4})-0?(\\d+)-0?(\\d+)[T ]0?(\\d+):0?(\\d+):0?(\\d+)$")) {
+        // Try to generate DATETIME type
+        try {
+            return java.sql.Timestamp.valueOf(LocalDateTime.parse(value));
+        }
+        finally{}
+    }
+    else if(value.matches("^[0-9]+$")) {
+        // Try to generate INTEGER type
+        try {
+            return Integer.parseInt(value);
+        }
+        finally {}
+    }
+    else if(value.matches("^[0-9\\.]+$")) {
+        // Try to generate FLOAT type
+        try {
+            return Float.parseFloat(value);
+        }
+        finally{}
+    }
+    else{
+        return value;
+    }
 ```
 
 Again, there may be better ways to do it but this was the solution I came up with and it seems to work. Let me know if I can do better.
