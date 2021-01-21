@@ -105,3 +105,51 @@ public class ICU {
 ```
 
 In regard to the JSON parameters, it was necessary to convert the JSON structure to the object map ICU expects as a parameter format. I've done this using a little helper class. Java stored procedures within the Oracle database are a bit thorny when it comes to exception handling, therefore this somewhat unusual approach of passing a status and an error message as out parameters was chosen. Should anybody know a more elegant way of dealing with exceptions, please let me know.
+
+## Casting datatypes from JSON to Java
+
+In regard to type safety in JSON, Albert Einstein comes to mind: »You have to make things as simple as possible. But not simpler.« The lack of types makes it difficult to pass in numbers and dates, especially, if it is not known ahead which data type to expect. This is the case in the ICU integration, as it is impossible to tell the datatype from the parameter list other than parsing it.
+
+Parsing strings and trying to deduct higher quality data types from it is not easy, espacially not in the vicinity of dates. Therefore, some assumption had to be made in order to make type detection possible with a reasonable amount of work. Those assumptions are:
+
+- Only integer or float values with a dot as the decimal separator and no thousand separator are allowed
+- Only date and date time expressions according to the ISO/XML norm are allowed. At the time being, I don't support time zones or time offsets.
+
+You could ask why I underwent the burdon and parse the datatypes, but as you may know, much of the formatting power of ICU is basd on proper data types. Therefore these conventions are necessary.
+
+Another topic is that ICU insists on Date types rather than LocalDate/LocalDateTime datatypes, but this is another issue that may be solved in a future version. As of now, I added the type detection feature in a helper class for JSON, using a simple regex cascade:
+
+```
+if (value.matches("^(\\d{4})-0?(\\d+)-0?(\\d+)$")) {
+			// Try to generate DATE type
+            try {
+            	return java.sql.Date.valueOf(LocalDate.parse(value));
+            }
+            finally{}
+		}
+		else if (value.matches("^(\\d{4})-0?(\\d+)-0?(\\d+)[T ]0?(\\d+):0?(\\d+):0?(\\d+)$")) {
+			// Try to generate DATETIME type
+            try {
+            	return java.sql.Timestamp.valueOf(LocalDateTime.parse(value));
+            }
+            finally{}
+		}
+		else if(value.matches("^[0-9]+$")) {
+			// Try to generate INTEGER type
+			try {
+				return Integer.parseInt(value);
+			}
+			finally {}
+		}
+		
+		else if(value.matches("^[0-9\\.]+$")) {
+			// Try to generate FLOAT type
+            try {
+            	return Float.parseFloat(value);
+            }
+            finally{}
+        }
+		return value;
+```
+
+Again, there may be better ways to do it but this was the solution I came up with and it seems to work. Let me know if I can do better.
