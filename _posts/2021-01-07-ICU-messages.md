@@ -60,3 +60,31 @@ Read more about this concept and how to include it into `PIT` [here](https://git
 It turned out that the required changes to `PIT` weren't as massive as feared. After importing the required ICU libraries (see the next section) and the small Java wrapper to call it from PL/SQL, it turned out that adding this wrapper method as a static member function to the `MESSAGE_TYPE` was the only change. In the constructor method of this type, it is analyzed whether the first parameter is `pit.FORMAT_ICU` and if it is, the static wrapper method is called to format the message. This was a nice proof of my concept to provide an »intelligent« message type rather than a simple string. Adding ICU was a snap basically and it leaves room for similar extension in the future.
 
 As ICU is not in integral part of the Oracle database, it is necessary to pass the actually set locale from the session context as an explicit parameter. Adding this to the Java library would have been possible but it would incur additional complexity by setting up an internal database connection from Java. Passing this information as a parameter was considered the simplest possible implementation.
+
+## The ICU class
+
+Luckily, there is an officially supported implementation of ICU for Java available at the [ICU project site](http://site.icu-project.org/download). I selected the actual version (68.2 at the time of this writing) and loaded it into the database. Additionally, I required support for JSON to be able to parse the named parameter provided in this format. To cater for this, I added `org.json` to the game. It can be downloaded [here](https://jar-download.com/artifacts/org.json).
+
+What is required then is a trivial Java project (well, at least for a seasoned Java developer, that is ... Unfortunately, I do not count myself among this group of people, so sorting out the Java related issues took a little time for me). Nevetheless, the simplest solution I could come across with is this method:
+
+```
+package icu;
+
+import java.util.Locale;
+import java.util.Map;
+import com.ibm.icu.text.MessageFormat;
+
+public class ICU {
+
+	public static String format(String message, String JSONParams, String ActiveLocale) {
+        Locale locale = new Locale(ActiveLocale);
+        MessageFormat formatter = new MessageFormat(message);
+        formatter.setLocale(locale);
+        Map <String, Object> attributes = JsonUtils.JSONStringtoMap(JSONParams);
+		return formatter.format(attributes);
+	}
+}
+
+```
+
+In regard to the JSON parameters, it was necessary to convert the JSON structure to the object map ICU expects as a parameter format. I've done this using a little helper class. Obviously, the code is anything but perfect, I need to dig into handling conversion errors and ICU formatting errors, should they occur. If your JSON is not correct, if will throw and unhandled Java exception at the moment. It's on my todo list to improve on that.
