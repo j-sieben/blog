@@ -82,6 +82,7 @@ public class ICU {
   public static String format(String message, String JSONParams, String ActiveLocale, int[] StatusCode, String[] ErrorMessage) {
       String formattedMessage = message;
       Locale locale = new Locale(ActiveLocale);
+      StatusCode = SUCCESS;
       MessageFormat formatter = new MessageFormat(message);
       formatter.setLocale(locale);
       try {
