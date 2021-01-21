@@ -76,15 +76,31 @@ import com.ibm.icu.text.MessageFormat;
 
 public class ICU {
 
-	public static String format(String message, String JSONParams, String ActiveLocale) {
-        Locale locale = new Locale(ActiveLocale);
-        MessageFormat formatter = new MessageFormat(message);
-        formatter.setLocale(locale);
-        Map <String, Object> attributes = JsonUtils.JSONStringtoMap(JSONParams);
-		return formatter.format(attributes);
-	}
-}
+  public static final int SUCCESS = 0;
+  public static final int FAILURE = 1;
+
+  public static String format(String message, String JSONParams, String ActiveLocale, int[] StatusCode, String[] ErrorMessage) {
+      String formattedMessage = message;
+      Locale locale = new Locale(ActiveLocale);
+      MessageFormat formatter = new MessageFormat(message);
+      formatter.setLocale(locale);
+      try {
+          Map <String, Object> attributes = JsonUtils.JSONStringtoMap(JSONParams);
+          try {
+              formattedMessage = formatter.format(attributes);
+          }
+          catch(IllegalArgumentException e){
+              StatusCode[0] = FAILURE;
+              ErrorMessage[0] = e.getMessage();
+          }
+      }
+      catch(JSONException e){
+           StatusCode[0] = FAILURE;
+           ErrorMessage[0] = JSONParams + ": " + e.getMessage();
+      }
+      return formattedMessage;
+  }
 
 ```
 
-In regard to the JSON parameters, it was necessary to convert the JSON structure to the object map ICU expects as a parameter format. I've done this using a little helper class. Obviously, the code is anything but perfect, I need to dig into handling conversion errors and ICU formatting errors, should they occur. If your JSON is not correct, if will throw and unhandled Java exception at the moment. It's on my todo list to improve on that.
+In regard to the JSON parameters, it was necessary to convert the JSON structure to the object map ICU expects as a parameter format. I've done this using a little helper class. Java stored procedures within the Oracle database are a bit thorny when it comes to exception handling, therefore this somewhat unusual approach of passing a status and an error message as out parameters was chosen. Should anybody know a more elegant way of dealing with exceptions, please let me know.
