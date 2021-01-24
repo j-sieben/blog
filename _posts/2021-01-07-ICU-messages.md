@@ -119,7 +119,7 @@ Parsing strings and trying to deduct higher quality data types from it is not ea
 
 You could ask why I underwent the burdon and parse the datatypes, but as you may know, much of the formatting power of ICU is basd on proper data types. Therefore these conventions are necessary.
 
-Another topic is that ICU insists on Java `Date` types rather than `LocalDate`/`LocalDateTime` datatypes, but this is another issue that may be solved in a future version. As of now, I added the type detection feature in a helper class for JSON, using a simple regex cascade:
+Another topic is that ICU insists on Java `Date`/`Timestamp` types rather than `LocalDate`/`LocalDateTime` datatypes, but this is another issue that may be solved in a future version. As of now, I added the type detection feature in a helper class for JSON, using a simple regex cascade:
 
 ```
     if (value.matches("^(\\d{4})-0?(\\d+)-0?(\\d+)$")) {
