@@ -47,19 +47,21 @@ pit.print(msg.MY_ICU_MESSAGE, msg_args(pit.FORMAT_ICU, '<ICU parameters>'));
 
 `PIT` handles the message anchors internally by their index. I felt that this wouldn't be a solution for ICU messages because decision logic is based on these anchors. Having a message that says `{0, select, =Y{some message} =N{some other message}}` is useless for a translator, especially, if it gets more complicated.
 
-A natural choice for me was to pass those named anchors and values as a JSON instance, especially because ICU expects number values not to be passed as string values. This way, I could stick to the existing API and reserve the second parameter of `P_MSG_ARGS` for the JSON string with the anchor names and values. Keep in mind though that `MSG_ARGS` is a table of CLOB. You can't pass in a JSON object but only its string representation.
+There are two alternative options for this. When looking at the examples in other programming languages, JSON seems to be a natural choice, especially because ICU expects number values not to be passed as string values. This way, I could stick to the existing API and reserve the second parameter of `P_MSG_ARGS` for the JSON string with the anchor names and values. Keep in mind though that `MSG_ARGS` is a table of CLOB. You can't pass in a JSON object but only its string representation.
+
+I then realised that composing a string that "looks like" a JSON object creates additional overhead that at the same time feels like a break in semantics, since you have to compose code from another programming language using string concatenation. Therefore I added a second convention which is known from other tools and functions, such as the `decode` SQL function and my `utl_text.bulk_replace` method: I decided to pass in the message attributes as name-value pairs using the normal `msg_args` instance. While this seems to be a simple solution at first sight, it turns out to be problematic in regard to the data types of the attributes. Reason is that ICU requires a string to be a string, a number to be a number and a date to be a date. Passing in these name value pairs does not allow to treat the values differently.
+
+To overcome this, an automatic data type detection system needs to be in place. I wanted to keep this code as simple as possible, therefore I decided to allow only a very limited set of formats for the respective data types. You may find details on that in section »Casting datatypes from JSON to Java« later in this post. Internally, the name-value pairs get translated to a generic JSON string containing only string attributes, but the logic within the wrapper class casts those to the correct datatypes as required by ICU.
 
 ## What's the benefit for `PIT`?
 
 It is now even easier to write code that meets the requirements of internationalisation. The ability to use ICU messages increases the overall quality of the code. As these messages are seamlessly integrated into the existing API, you can decide for each individual message whether you need the additional functionality of ICU messages or whether the easier-to-use normal `PIT` message is sufficient.
 
-Read more about this concept and how to include it into `PIT` [here](https://github.com/j-sieben/PIT/blob/master/Doc/icu_messages.md).
-
 ## How the ICU extension for `PIT` works
 
-It turned out that the required changes to `PIT` weren't as massive as feared. After importing the required ICU libraries (see the next section) and the small Java wrapper to call it from PL/SQL, it turned out that adding this wrapper method as a static member function to the `MESSAGE_TYPE` was the only change. In the constructor method of this type, it is analyzed whether the first parameter is `pit.FORMAT_ICU` and if it is, the static wrapper method is called to format the message. This was a nice proof of my concept to provide an »intelligent« message type rather than a simple string. Adding ICU was a snap basically and it leaves room for similar extension in the future.
+It turned out that the required changes to `PIT` weren't as massive as feared. After importing the required ICU libraries (see the next section) and a small Java wrapper to call it from PL/SQL, all the required functionality was in place. To call it, it was sufficient to add this wrapper method as a static member function to `MESSAGE_TYPE` object type. In the constructor method of this type, it is analyzed whether the first parameter is `pit.FORMAT_ICU` and if it is, the static wrapper method is called to format the message. This was a nice proof of my concept to provide an »intelligent« message type rather than a simple string. Adding ICU was a snap basically and it leaves room for similar extension in the future.
 
-As ICU is not in integral part of the Oracle database, it is necessary to pass the actually set locale from the session context as an explicit parameter. Adding this to the Java library would have been possible but it would incur additional complexity by setting up an internal database connection from Java. Passing this information as a parameter was considered the simplest possible implementation.
+As ICU is not in integral part of the Oracle database, it is necessary to pass the actually set locale from the session context as an explicit parameter. Adding this to the Java library would have been possible but it would incur additional complexity by setting up an internal database connection from Java. Passing this information as a parameter was considered the simplest possible implementation. As the message is aware of this setting when it is instantiated, the only challenge was to translate the actually selected language to an ISO complient language string consumable by ICU. To cater for this, a method of package `UTL_I18N` was used so this could be handled within the constructor method as well.
 
 ## The ICU class
 
@@ -108,7 +110,7 @@ In regard to the JSON parameters, it was necessary to convert the JSON structure
 
 ## Casting datatypes from JSON to Java
 
-In regard to type safety in JSON, Albert Einstein comes to mind: »You have to make things as simple as possible. But not simpler.« The lack of types makes it difficult to pass in numbers and dates, especially, if it is not known ahead which data type to expect. This is the case in the ICU integration, as it is impossible to tell the datatype from the parameter list other than parsing it.
+In regard to type safety in JSON, Albert Einstein comes to mind: »You have to make things as simple as possible. But not simpler.« The lack of types in JSON makes it difficult to pass in numbers and dates - especially, if it is not known ahead which data type to expect. This is the case in the ICU integration, as it is impossible to tell the datatype from the parameter list other than parsing it.
 
 Parsing strings and trying to deduct higher quality data types from it is not easy, espacially not in the vicinity of dates. Therefore, some assumption had to be made in order to make type detection possible with a reasonable amount of work. Those assumptions are:
 
@@ -117,7 +119,7 @@ Parsing strings and trying to deduct higher quality data types from it is not ea
 
 You could ask why I underwent the burdon and parse the datatypes, but as you may know, much of the formatting power of ICU is basd on proper data types. Therefore these conventions are necessary.
 
-Another topic is that ICU insists on Date types rather than LocalDate/LocalDateTime datatypes, but this is another issue that may be solved in a future version. As of now, I added the type detection feature in a helper class for JSON, using a simple regex cascade:
+Another topic is that ICU insists on Java `Date` types rather than `LocalDate`/`LocalDateTime` datatypes, but this is another issue that may be solved in a future version. As of now, I added the type detection feature in a helper class for JSON, using a simple regex cascade:
 
 ```
     if (value.matches("^(\\d{4})-0?(\\d+)-0?(\\d+)$")) {
